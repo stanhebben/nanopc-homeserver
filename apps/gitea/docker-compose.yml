@@ -1,0 +1,64 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+  gitea:
+
+services:
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - DB_TYPE=mysql
+      - DB_HOST=gitea-db:3306
+      - DB_NAME=gitea
+      - DB_USER=gitea
+      - DB_PASSWD=${MYSQL_PASSWORD}
+    restart: always
+    networks:
+      - gitea
+      - base_proxy
+    volumes:
+      - ./data:/data
+    ports:
+      - "2001:22"
+    depends_on:
+      - gitea-db
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.gitea-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.gitea.loadbalancer.passhostheader: true
+      traefik.http.services.gitea.loadbalancer.server.port: 3000
+      # Web
+      traefik.http.routers.gitea-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.gitea-insecure.entrypoints: web
+      traefik.http.routers.gitea-insecure.service: gitea
+      traefik.http.routers.gitea-insecure.middlewares: gitea-web-redirect
+      # Websecure
+      traefik.http.routers.gitea.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.gitea.entrypoints: websecure
+      traefik.http.routers.gitea.service: gitea
+      traefik.http.routers.gitea.tls.certresolver: myresolver
+
+  gitea-db:
+    image: mariadb:10.8
+    container_name: gitea-db
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MARIADB_DATABASE=gitea
+      - MARIADB_USER=gitea
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - ${LOCAL_DATA_DIR}/db/:/var/lib/mysql:z
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=$$MARIADB_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+    networks:
+      - gitea
