@@ -190,7 +190,8 @@ If you're setting up a new system, follow these instructions. If restoring from 
 		- `joplin`: `joplin:22300`
 		- `mstream`: `mstream:3000`
 		- `photoprism`: `photoprism:2342`
-		- `vaultwarden`: `vaultwarden:80`
+		- `seafile`: `seafile`
+		- `vaultwarden`: `vaultwarden`
 
 ## Restoring a backup
 
