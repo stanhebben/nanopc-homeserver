@@ -132,7 +132,7 @@ In order for Traefik to setup the DNS records for the Letsencrypt challenges, it
 	- Create token
 	- Copy the token somewhere (and remember that this is the DNS API key!)
 
-## Initial setup
+## Preparing the device
 
 Setup the device:
 - Open Putty and connect to "friendlywrt", username `root` password `password`
@@ -147,24 +147,35 @@ cd nanopc-homeserver
 - Run `bash 2-setup.sh`
 - Enter your new root password
 - Login to your BackBlaze acount
+- If you don't already have a bucket to store your backups, create one here and remember the name.
 - Go to Application Keys (under the Account section in the left navigation)
 - Add a new application key
+- Restrict it to the backup bucket only
 - Give it a name and press "Create new Key"
 - The key ID and key will appear in a blue box
 - Go back to your Putty SSH session
 - Copy and paste (right click to paste) the Key ID of the newly generated key and press enter
 - Copy and paste the key and press enter
+- Enter the bucket name
+- Choose a password for the backups (or use the existing one if you're restoring a backup)
 - Perform some checks to see if everything works correctly so far:
 	- Browse to http://friendlywrt:8000 with your browser - username is root and password is the one you just chose. It should show the configuration page.
 	- Run `lsblk` to check that your SSD is correctly mounted - it should show an `nvme0n1p1` partition mounted to `/mnt/ssd`
 - Reboot the device: `reboot`
 - Login to the device again and go back to the nanopc-homeserver directory
-- Start setup of the local app proxy: `bash 3-setup-proxy.sh`. Keep your generated CloudFlare keys and Tunnel token ready, this script will ask for them.
+
+## Initializing a new system
+
+If you're setting up a new system, follow these instructions. If restoring from a backup, use the instructions under "Restoring a backup" instead.
+
+- Start setup of the local app proxy: `bash 3a-initialize.sh`. Keep your generated CloudFlare keys and Tunnel token ready, this script will ask for them.
 - Then you can setup each service with `bash install.sh <service>`:
+  - `gitea` - git repository
 	- `joplin` - note keeping
 	- `mstream` - music streaming
 	- `photoprism` - to browse your photos
 	- `seafile` - file storage (Dropbox / Google drive alternative)
+	- `vaultwarden` - resource-efficient Bitwarden alternative
 - For each service you want to be externally accessible, you'll also have to add an entry to your Cloudflare tunnel configuration:
 	- From your BackBlaze dashboard, go to Zero trust -> Access -> Tunnels
 	- Next to your tunnels, press the ... icon and select "Configure"
@@ -175,6 +186,16 @@ cd nanopc-homeserver
 	- Path must be left empty
 	- Type = HTTP
 	- URL:
+	  - `gitea`: `gitea:3000`
 		- `joplin`: `joplin:22300`
 		- `mstream`: `mstream:3000`
 		- `photoprism`: `photoprism:2342`
+		- `vaultwarden`: `vaultwarden:80`
+
+## Restoring a backup
+
+The system will automatically take nightly backups (at 2:00 AM by default). `restic` is used to make the backups - they are end-to-end encrypted (BackBlaze can't read your data) and snapshots are kept for 14 days by default. Update the `/mnt/ssd/backup.sh` script if you want to change which snapshots are kept.
+
+Restoring a backup is easy: run `bash 3b-restore.sh` and everything will be restored from the BackBlaze backup.
+
+This also works if you are able to recover some of the files. In that case, put the files in their proper place before restoring the backup. For instance, if you have an old offline backup, you can copy that first (to save time and bandwidth) and then perform automatic restore.
