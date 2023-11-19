@@ -1,0 +1,32 @@
+version: '3.10'
+
+networks:
+  proxy:
+    driver: bridge
+
+services:
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare"
+      - "--certificatesresolvers.myresolver.acme.email=${ADMIN_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik:/root/.config
+      - ./traefik/shared:/shared
+      - ./traefik/letsencrypt:/letsencrypt
+    networks:
+      - proxy
+    environment:
+      - CF_DNS_API_TOKEN
+      - CF_ZONE_API_TOKEN

@@ -1,0 +1,16 @@
+version: "3.9"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: "tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}"
+    restart: unless-stopped
+    volumes:
+      - ./data:/home/nonroot/.cloudflared/
+    networks:
+      - base_proxy

@@ -1,0 +1,54 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+  joplin:
+
+services:
+  joplin:
+    container_name: joplin
+    image: florider89/joplin-server:2.13.2
+    restart: unless-stopped
+    depends_on:
+      - joplin-db
+    networks:
+      - base_proxy
+      - joplin
+    environment:
+      - APP_PORT=22300
+      - APP_BASE_URL=https://${APP_DOMAIN}/
+      - DB_CLIENT=pg
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=joplin
+      - POSTGRES_DATABASE=joplin
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=joplin-db
+      - MAX_TIME_DRIFT=0
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.joplin-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.joplin.loadbalancer.passhostheader: true
+      traefik.http.services.joplin.loadbalancer.server.port: 22300
+      # Web
+      traefik.http.routers.joplin-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.joplin-insecure.entrypoints: web
+      traefik.http.routers.joplin-insecure.service: joplin
+      traefik.http.routers.joplin-insecure.middlewares: joplin-web-redirect
+      # Websecure
+      traefik.http.routers.joplin.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.joplin.entrypoints: websecure
+      traefik.http.routers.joplin.service: joplin
+      traefik.http.routers.joplin.tls.certresolver: myresolver
+
+  joplin-db:
+    image: postgres:15
+    volumes:
+      - ../../apps-local/joplin/db:/var/lib/postgresql/data
+    networks:
+      - joplin
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=joplin
+      - POSTGRES_DB=joplin
