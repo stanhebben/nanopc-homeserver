@@ -1,5 +1,30 @@
 # NanoPC T6 homeserver setup scripts
 
+The goal of this project was to provide a home server with the following properties:
+
+- The services of this home server can be accessed both internally and externally.
+- The server does not depend on a fixed IP address so it can be used on a regular internet subscription.
+- The server is mobile and you can take it with you. Just turn it on and it will work.
+- All connections are over https, both internally and externally.
+- Setup is modular and adding new services is easy.
+- Backups are automatic and in the cloud, so that if the device is lost or broken, your data is always recoverable.
+
+This repository contains instructions and scripts that implement this as follows:
+
+- Traefik is used for proxying and requesting letsencrypt certificates.
+- Cloudflare is used for tunneling (zero trust). This also means that DNS is hosted on Cloudflare. This is not only important for the tunneling to work, but also for the letsencrypt certificates, which will use DNS challenges. (We must use DNS challenges since the Let's Encrypt HTTP challenges don't pass through the Cloudflare tunnel) A free account is sufficient.
+- Backups are stored on Backblaze. At 6$/TB/month, they're cheap and reliable.
+
+What kind of services can this home server host? Anything that is available as docker image, essentially, which in my case includes:
+
+- Seafile as Dropbox/Google Drive alternative
+- Vaultwarden (compatible with Bitwarden clients) for password storage
+- Joplin to keep notes
+- Plex for media streaming
+- Photoprism for viewing and organizing photo's
+- Samba for file storage
+- Gitea for git repositories
+- NocoDB as Airtable alternative
 
 ## Hardware used
 
@@ -50,6 +75,65 @@ Connecting to PC:
 - Connect ETH2 (LAN port) to your PC
 - Test by going to http://friendlwrt , username "root", pasword "password"
 
+## Preparation
+
+Make sure you have the following available:
+- Your own domain name
+- A BackBlaze account to store backups
+- A CloudFlare account to host the DNS and tunnel
+
+If you don't already have a domain name, get one. If your domain is mydomain.net, then the services will become direct subdomains eg. joplin.mydomain.net, seafile.mydomain.net and so on. If you want second-level subdomains (such as seafile.mybox.mydomain.net) a paid Cloudflare subscription is required. Otherwise, a free subscription will be sufficient.
+
+### Preparing the BackBlaze account
+
+For BackBlaze, you'll need to register a B2 account ([Register](https://www.backblaze.com/sign-up/cloud-storage?referrer=getstarted)). This account will be used in the steps described below.
+
+### Preparing the Cloudflare account
+
+If your domain name is not registered via Cloudflare, make sure to set CloudFlare as your DNS provider:
+
+- First login to your Cloudflare account. Then under Websites, create a new website.
+- Select the Free plan
+- Cloudflare will attempt to import all your existing DNS records. Review it and double-check that everything is correct. You may also need to disable the proxy on some of your subdomains in the following cases:
+	- you have second level subdomains that are not covered by the certificate in the free plan
+	- if you need http access for domains that use Letsencrypt certificates with HTTP challenges.
+- Continue
+- Follow the instructions presented to update your DNS settings on your domain registrar.
+
+Make sure these steps are completed BEFORE attempting to setup the tunnel and proxy. Otherwise both the tunneling and the Letsencrypt certificates will NOT work.
+
+### Setting up the tunnel in Cloudflare
+
+- In your CloudFlare dashboard, go to the Zero Trust section.
+- Select Access -> Tunnels
+- Create a tunnel
+- Give the tunnel a name and save it
+- Copy the command shown in "Run the following command" somewhere. Remove the "cloudflared.exe service install" command, you only need the token without anything else.
+
+### Creating the DNS and Zone application keys
+
+In order for Traefik to setup the DNS records for the Letsencrypt challenges, it must first have the necessary API keys. These are configured as follows:
+
+- Go to your [API Tokens](https://dash.cloudflare.com/profile/api-tokens) via your profile icon at the top -> My Account -> API Tokens
+- Create a token to read all zones:
+	- Create Token
+	- Create Custom Token (Get started)
+	- Enter a name (eg. "View all zones")
+	- Permissions: Zone - Zone - Read
+	- Continue to summary
+	- Create token
+	- Copy the token somewhere (and remember that this is the Zone API key!)
+	- Go back to View all API tokens
+- Create a token to edit your DNS:
+	- Create token
+	- Edit zone DNS - Use template
+	- Zone Resources: Include - Specific zone - select your domain name
+	- Continue to summary
+	- Create token
+	- Copy the token somewhere (and remember that this is the DNS API key!)
+
+## Initial setup
+
 Setup the device:
 - Open Putty and connect to "friendlywrt", username `root` password `password`
 - Check out the setup repository on it:
@@ -75,4 +159,22 @@ cd nanopc-homeserver
 	- Run `lsblk` to check that your SSD is correctly mounted - it should show an `nvme0n1p1` partition mounted to `/mnt/ssd`
 - Reboot the device: `reboot`
 - Login to the device again and go back to the nanopc-homeserver directory
-- Start setup of runtipi: `bash 3-runtipi.sh`
+- Start setup of the local app proxy: `bash 3-setup-proxy.sh`. Keep your generated CloudFlare keys and Tunnel token ready, this script will ask for them.
+- Then you can setup each service with `bash install.sh <service>`:
+	- `joplin` - note keeping
+	- `mstream` - music streaming
+	- `photoprism` - to browse your photos
+	- `seafile` - file storage (Dropbox / Google drive alternative)
+- For each service you want to be externally accessible, you'll also have to add an entry to your Cloudflare tunnel configuration:
+	- From your BackBlaze dashboard, go to Zero trust -> Access -> Tunnels
+	- Next to your tunnels, press the ... icon and select "Configure"
+	- Go to the "Public hostname" tab
+	- Add a public hostname
+	- Subdomain = enter the subdomain you wish to add
+	- Select the domain you're working with
+	- Path must be left empty
+	- Type = HTTP
+	- URL:
+		- `joplin`: `joplin:22300`
+		- `mstream`: `mstream:3000`
+		- `photoprism`: `photoprism:2342`

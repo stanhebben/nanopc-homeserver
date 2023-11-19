@@ -1,0 +1,35 @@
+version: "3"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  mstream:
+    container_name: mstream
+    image: lscr.io/linuxserver/mstream:v5.11.4-ls101
+    restart: unless-stopped
+    volumes:
+      - ./data/mstream-config:/data
+      - ${MEDIA_FOLDER}/music:/music
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    networks:
+      - base_proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.mstream-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.mstream.loadbalancer.passhostheader: true
+      traefik.http.services.mstream.loadbalancer.server.port: 3000
+      # Web
+      traefik.http.routers.mstream-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.mstream-insecure.entrypoints: web
+      traefik.http.routers.mstream-insecure.service: mstream
+      traefik.http.routers.mstream-insecure.middlewares: mstream-web-redirect
+      # Websecure
+      traefik.http.routers.mstream.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.mstream.entrypoints: websecure
+      traefik.http.routers.mstream.service: mstream
+      traefik.http.routers.mstream.tls.certresolver: myresolver
