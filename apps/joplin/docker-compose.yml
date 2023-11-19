@@ -52,3 +52,9 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_USER=joplin
       - POSTGRES_DB=joplin
+    healthcheck:
+      test: pg_isready -d joplin
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s

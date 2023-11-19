@@ -4,7 +4,8 @@ read -p "Domain name: " APP_DOMAIN
 
 APP_DIR=/mnt/ssd/apps/mstream
 LOCAL_IPV4=`uci get network.lan.ipaddr`
-LOCAL_IPV6='fd00:ab:cd::1'
+LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
+LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}
 TZ=`uci get system.@system[0].zonename`
 
 mkdir -p $APP_DIR
