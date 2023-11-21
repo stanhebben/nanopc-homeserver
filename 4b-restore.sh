@@ -3,7 +3,7 @@
 cd /mnt/ssd
 source backup.env
 
-B2_ACCOUNT_ID=$B2_ACCOUNT_ID B2_ACCOUNT_KEY=$B2_ACCOUNT_KEY restic -r $REPO --password-file backup.key restore latest
+B2_ACCOUNT_ID=$B2_ACCOUNT_ID B2_ACCOUNT_KEY=$B2_ACCOUNT_KEY restic -r $REPO --password-file backup.key restore latest --target /mnt/ssd
 
 export RESTORE_DIR=/mnt/ssd/apps-backup
 
