@@ -56,7 +56,7 @@ opkg install docker-compose
 #b2 authorize-account
 
 # generate ssh key
-ssh-keygen
+ssh-keygen -f /root/.ssh/id_ed25519 -t ed25519 -N ''
 
 # move uhttpd to another port so we can setup nginx as http server
 uci del_list uhttpd.main.listen_http='0.0.0.0:80'
@@ -69,21 +69,3 @@ uci add_list uhttpd.main.listen_https='0.0.0.0:4430'
 uci add_list uhttpd.main.listen_https='[::]:4430'
 uci commit uhttpd
 service uhttpd restart
-
-# initialize restic + automatic backups
-read -p "B2 Application Key ID: " B2_ACCOUNT_ID
-read -p "B2 Application Key: " B2_ACCOUNT_KEY
-read -p "B2 Bucket name: " B2_BUCKET_NAME
-
-echo "Choose a password for your backups. DO NOT LOSE THAT PASSWORD OR YOU CANNOT ACCESS YOUR BACKUPS."
-read -p "Backup password: " BACKUP_PASSWORD
-echo $BACKUP_PASSWORD > /mnt/ssd/backup.key
-B2_ACCOUNT_ID=$B2_ACCOUNT_ID B2_ACCOUNT_KEY=$B2_ACCOUNT_KEY restic -r b2:${B2_BUCKET_NAME} --password-file /mnt/ssd/backup.key init
-
-echo "B2_ACCOUNT_ID=$B2_ACCOUNT_ID" >> /mnt/ssd/backup.env
-echo "B2_ACCOUNT_KEY=$B2_ACCOUNT_KEY" >> /mnt/ssd/backup.env
-echo "REPO=b2:${B2_BUCKET_NAME}" >> /mnt/ssd/backup.env
-
-cp backup.sh /mnt/ssd/
-echo "0 2 * * * /bin/bash /mnt/ssd/backup.sh" >> /etc/crontabs/root
-service cron restart
