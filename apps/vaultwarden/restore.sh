@@ -4,7 +4,7 @@ source .env
 
 docker compose up -d
 
-if [ -z $(grep "$APP_DOMAIN" /etc/hosts) ]; then
+if ! grep -q "$APP_DOMAIN" /etc/hosts; then
   LOCAL_IPV4=`uci get network.lan.ipaddr`
   LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
   LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}

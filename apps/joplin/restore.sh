@@ -13,7 +13,7 @@ docker compose up -d joplin-db --wait || exit 1
 gunzip < $RESTORE_DIR/joplin/db.sql.gz | docker compose exec -T joplin-db psql -U joplin || exit 1
 docker compose up -d
 
-if [ -z $(grep "$APP_DOMAIN" /etc/hosts) ]; then
+if ! grep -q "$APP_DOMAIN" /etc/hosts; then
   LOCAL_IPV4=`uci get network.lan.ipaddr`
   LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
   LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}
