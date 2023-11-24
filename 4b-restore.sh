@@ -17,7 +17,7 @@ do
   pushd $dir
   if [ -f $dir/restore.sh ]; then
     echo "Restoring $dir"
-    bash backup.sh
+    bash restore.sh
   else
     docker compose up -d
   fi
