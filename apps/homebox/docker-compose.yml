@@ -1,0 +1,33 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  homebox:
+    image: ghcr.io/hay-kot/homebox:v0.10.2
+    container_name: homebox
+    restart: always
+    environment:
+      - HBOX_LOG_LEVEL=info
+      - HBOX_LOG_FORMAT=text
+      - HBOX_WEB_MAX_UPLOAD_SIZE=10
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+    volumes:
+      - ./data:/data/
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.homebox-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.homebox.loadbalancer.passhostheader: true
+      traefik.http.services.homebox.loadbalancer.server.port: 7745
+      # Web
+      traefik.http.routers.homebox-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.homebox-insecure.entrypoints: web
+      traefik.http.routers.homebox-insecure.service: homebox
+      traefik.http.routers.homebox-insecure.middlewares: homebox-web-redirect
+      # Websecure
+      traefik.http.routers.homebox.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.homebox.entrypoints: websecure
+      traefik.http.routers.homebox.service: homebox
+      traefik.http.routers.homebox.tls.certresolver: myresolver
