@@ -14,6 +14,8 @@ services:
       - HBOX_LOG_FORMAT=text
       - HBOX_WEB_MAX_UPLOAD_SIZE=10
       - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+    networks:
+      - base_proxy
     volumes:
       - ./data:/data/
     labels:
