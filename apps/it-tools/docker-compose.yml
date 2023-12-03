@@ -10,7 +10,7 @@ services:
     image: corentinth/it-tools:latest
     restart: unless-stopped
     networks:
-      - base_Proxy
+      - base_proxy
     labels:
       traefik.enable: true
       traefik.http.middlewares.ittools-web-redirect.redirectscheme.scheme: https

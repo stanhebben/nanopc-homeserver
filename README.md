@@ -29,6 +29,7 @@ What kind of services can this home server host? Anything that is available as d
 ## Hardware used
 
 You'll need the following hardware:
+
 - A NanoPC-T6 (I used the version with metal case)
 - An NVMe SSD drive. Not all drives work: Samsung 970 and 990 SSD drives are known to work. A WD Blue SN570 2TB did not work at all.
 - An USB-C cable. The NanoPC-T6 has a Type C port that is also used when flashing, so make sure you are able to connect it to your PC.
@@ -48,14 +49,17 @@ This setup assumes that the device will be used as a router, using a device as a
 See [the FriendlyElec wiki](http://wiki.friendlyelec.com/wiki/index.php/NanoPC-T6) for details
 
 Download the necessary software from [the FriendlyElec Google Drive folder](https://drive.google.com/drive/folders/1FoBbP_nPkMehwBj4wHwsbRU-QGjEdeEP):
+
 - 01_Official images/03_USB upgrade images/rk3588-usb-friendlywrt-23.05-docker-20231031.zip (or a newer version, but make sure it's the version with docker included)
 - 05_Tools/DriverAssitant_v5.1.1.zip
 
 Setup these tools:
+
 - Extract the driver assistant and run DriverInstall.exe
 - Extract the image zip file
 
 Flashing:
+
 - Prepare the power adapter
 - Push the MASK button with a paperclip
 - Insert the power adapter while holding the MASK button
@@ -63,7 +67,7 @@ Flashing:
 - Release the MASK button
 - Connect the NanoPC with your PC (I connected USB-C to USB-C)
 - Open the RKDevTool.exe bundled with the official image
-- Check that it found the device: it should show "发现一个MASKROM设备" (see screenshot below). If no device was discovered, it will show "没有发现设备" instead and you'll have to try again.
+- Check that it found the device: it should show "发现一个 MASKROM 设备" (see screenshot below). If no device was discovered, it will show "没有发现设备" instead and you'll have to try again.
 - Click the 执行 ("execute") button (see screenshot below)
 - Wait until finished
 - You can now disconnect the USB cable
@@ -71,6 +75,7 @@ Flashing:
 ![RKDevTool - found device](screenshots/rkdevtool-1.png)
 
 Connecting to PC:
+
 - Connect ETH1 (WAN port) to a wired connection in your house
 - Connect ETH2 (LAN port) to your PC
 - Test by going to http://friendlwrt , username "root", pasword "password"
@@ -78,6 +83,7 @@ Connecting to PC:
 ## Preparation
 
 Make sure you have the following available:
+
 - Your own domain name
 - A BackBlaze account to store backups
 - A CloudFlare account to host the DNS and tunnel
@@ -95,8 +101,8 @@ If your domain name is not registered via Cloudflare, make sure to set CloudFlar
 - First login to your Cloudflare account. Then under Websites, create a new website.
 - Select the Free plan
 - Cloudflare will attempt to import all your existing DNS records. Review it and double-check that everything is correct. You may also need to disable the proxy on some of your subdomains in the following cases:
-	- you have second level subdomains that are not covered by the certificate in the free plan
-	- if you need http access for domains that use Letsencrypt certificates with HTTP challenges.
+  - you have second level subdomains that are not covered by the certificate in the free plan
+  - if you need http access for domains that use Letsencrypt certificates with HTTP challenges.
 - Continue
 - Follow the instructions presented to update your DNS settings on your domain registrar.
 
@@ -116,25 +122,26 @@ In order for Traefik to setup the DNS records for the Letsencrypt challenges, it
 
 - Go to your [API Tokens](https://dash.cloudflare.com/profile/api-tokens) via your profile icon at the top -> My Account -> API Tokens
 - Create a token to read all zones:
-	- Create Token
-	- Create Custom Token (Get started)
-	- Enter a name (eg. "View all zones")
-	- Permissions: Zone - Zone - Read
-	- Continue to summary
-	- Create token
-	- Copy the token somewhere (and remember that this is the Zone API key!)
-	- Go back to View all API tokens
+  - Create Token
+  - Create Custom Token (Get started)
+  - Enter a name (eg. "View all zones")
+  - Permissions: Zone - Zone - Read
+  - Continue to summary
+  - Create token
+  - Copy the token somewhere (and remember that this is the Zone API key!)
+  - Go back to View all API tokens
 - Create a token to edit your DNS:
-	- Create token
-	- Edit zone DNS - Use template
-	- Zone Resources: Include - Specific zone - select your domain name
-	- Continue to summary
-	- Create token
-	- Copy the token somewhere (and remember that this is the DNS API key!)
+  - Create token
+  - Edit zone DNS - Use template
+  - Zone Resources: Include - Specific zone - select your domain name
+  - Continue to summary
+  - Create token
+  - Copy the token somewhere (and remember that this is the DNS API key!)
 
 ## Preparing the device
 
 Setup the device:
+
 - Open Putty and connect to "friendlywrt", username `root` password `password`
 - Check out the setup repository on it:
 
@@ -166,8 +173,8 @@ cd nanopc-homeserver
 ### Completing setup
 
 - Perform some checks to see if everything works correctly so far:
-	- Browse to http://friendlywrt:8000 with your browser - username is root and password is the one you just chose. It should show the configuration page.
-	- Run `lsblk` to check that your SSD is correctly mounted - it should show an `nvme0n1p1` partition mounted to `/mnt/ssd`
+  - Browse to http://friendlywrt:8000 with your browser - username is root and password is the one you just chose. It should show the configuration page.
+  - Run `lsblk` to check that your SSD is correctly mounted - it should show an `nvme0n1p1` partition mounted to `/mnt/ssd`
 - Reboot the device: `reboot`
 - Login to the device again and go back to the nanopc-homeserver directory
 
@@ -178,27 +185,36 @@ If you're setting up a new system, follow these instructions. If restoring from 
 - Start setup of the local app proxy: `bash 4a-initialize.sh`. Keep your generated CloudFlare keys and Tunnel token ready, this script will ask for them.
 - Then you can setup each service with `bash install.sh <service>`:
   - `gitea` - git repository
-	- `joplin` - note keeping
-	- `mstream` - music streaming
-	- `photoprism` - to browse your photos
-	- `seafile` - file storage (Dropbox / Google drive alternative)
-	- `vaultwarden` - resource-efficient Bitwarden alternative
+  - `homebox` - home item inventory
+  - `it-tools` - set of small developer tools
+  - `jellyfin` - video streaming
+  - `joplin` - server for Joplin notes (note taking)
+  - `mstream` - music streaming
+  - `navidrome` - music streaming
+  - `photoprism` - to browse your photos
+  - `privatebin` - secure end-to-end encrypted note sharing
+  - `seafile` - file storage (Dropbox / Google drive alternative)
+  - `vaultwarden` - resource-efficient Bitwarden alternative
 - For each service you want to be externally accessible, you'll also have to add an entry to your Cloudflare tunnel configuration:
-	- From your BackBlaze dashboard, go to Zero trust -> Access -> Tunnels
-	- Next to your tunnels, press the ... icon and select "Configure"
-	- Go to the "Public hostname" tab
-	- Add a public hostname
-	- Subdomain = enter the subdomain you wish to add
-	- Select the domain you're working with
-	- Path must be left empty
-	- Type = HTTP
-	- URL:
-	  - `gitea`: `gitea:3000`
-		- `joplin`: `joplin:22300`
-		- `mstream`: `mstream:3000`
-		- `photoprism`: `photoprism:2342`
-		- `seafile`: `seafile`
-		- `vaultwarden`: `vaultwarden`
+  - From your BackBlaze dashboard, go to Zero trust -> Access -> Tunnels
+  - Next to your tunnels, press the ... icon and select "Configure"
+  - Go to the "Public hostname" tab
+  - Add a public hostname
+  - Subdomain = enter the subdomain you wish to add
+  - Select the domain you're working with
+  - Path must be left empty
+  - Type = HTTP
+  - URL:
+    - `gitea`: `gitea:3000`
+    - `homebox`: `homebox:7745`
+    - `it-tools`: `it-tools`
+    - `joplin`: `joplin:22300`
+    - `mstream`: `mstream:3000`
+    - `navidrome`: `navidrome:4533`
+    - `photoprism`: `photoprism:2342`
+    - `privatebin`: `privatebin:8080`
+    - `seafile`: `seafile`
+    - `vaultwarden`: `vaultwarden`
 
 ## Restoring a backup
 
