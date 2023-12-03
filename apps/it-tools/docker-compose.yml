@@ -1,0 +1,28 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  it-tools:
+    container_name: it-tools
+    image: corentinth/it-tools:latest
+    restart: unless-stopped
+    networks:
+      - base_Proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.ittools-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.ittools.loadbalancer.passhostheader: true
+      traefik.http.services.ittools.loadbalancer.server.port: 80
+      # Web
+      traefik.http.routers.ittools-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.ittools-insecure.entrypoints: web
+      traefik.http.routers.ittools-insecure.service: ittools
+      traefik.http.routers.ittools-insecure.middlewares: ittools-web-redirect
+      # Websecure
+      traefik.http.routers.ittools.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.ittools.entrypoints: websecure
+      traefik.http.routers.ittools.service: ittools
+      traefik.http.routers.ittools.tls.certresolver: myresolver
