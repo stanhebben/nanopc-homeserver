@@ -1,0 +1,30 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  privatebin:
+    image: privatebin/nginx-fpm-alpine:1.6.0
+    container_name: privatebin
+    restart: unless-stopped
+    networks:
+      - base_proxy
+    volumes:
+      - ./data:/srv/data
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.privatebin-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.privatebin.loadbalancer.passhostheader: true
+      traefik.http.services.privatebin.loadbalancer.server.port: 8080
+      # Web
+      traefik.http.routers.privatebin-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.privatebin-insecure.entrypoints: web
+      traefik.http.routers.privatebin-insecure.service: privatebin
+      traefik.http.routers.privatebin-insecure.middlewares: privatebin-web-redirect
+      # Websecure
+      traefik.http.routers.privatebin.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.privatebin.entrypoints: websecure
+      traefik.http.routers.privatebin.service: privatebin
+      traefik.http.routers.privatebin.tls.certresolver: myresolver

@@ -31,3 +31,11 @@ service dnsmasq restart
 pushd $APP_DIR
 docker compose up -d
 popd
+
+## TODO: add
+#ALLOWED_HOSTS = ['seafile.stanhebben.net']
+#CSRF_COOKIE_SECURE = True
+#CSRF_COOKIE_SAMESITE = 'Strict'
+#CSRF_TRUSTED_ORIGINS = ['https://seafile.stanhebben.net']
+# to data/seafile/conf/seahub_settings.py
+# and restart seafile

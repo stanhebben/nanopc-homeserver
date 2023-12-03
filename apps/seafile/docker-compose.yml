@@ -18,7 +18,7 @@ services:
       - seafile
     restart: unless-stopped
     healthcheck:
-      test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      test: '/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute "SHOW DATABASES;"'
       interval: 5s
       timeout: 1s
       retries: 5
@@ -43,8 +43,9 @@ services:
       - TIME_ZONE=$TZ
       - SEAFILE_ADMIN_EMAIL=$ADMIN_EMAIL
       - SEAFILE_ADMIN_PASSWORD=$ADMIN_PASSWORD
-      - SEAFILE_SERVER_LETSENCRYPT=false  # Managed by Traefik instead
+      - SEAFILE_SERVER_LETSENCRYPT=false # Managed by Traefik instead
       - SEAFILE_SERVER_HOSTNAME=$APP_DOMAIN
+      - FORCE_HTTPS_IN_CONF=true
     depends_on:
       - seafile-db
       - memcached
