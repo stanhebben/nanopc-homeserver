@@ -1,0 +1,36 @@
+version: "3"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  navidrome:
+    container_name: navidrome
+    image: deluan/navidrome:0.50.1
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+      - ${MEDIA_FOLDER}/music:/music:ro
+    environment:
+      ND_SCANSCHEDULE: 1h
+      ND_LOGLEVEL: info
+      ND_SESSIONTIMEOUT: 24h
+      ND_BASEURL: ""
+    networks:
+      - base_proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.navidrome-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.navidrome.loadbalancer.passhostheader: true
+      traefik.http.services.navidrome.loadbalancer.server.port: 4533
+      # Web
+      traefik.http.routers.navidrome-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.navidrome-insecure.entrypoints: web
+      traefik.http.routers.navidrome-insecure.service: navidrome
+      traefik.http.routers.navidrome-insecure.middlewares: navidrome-web-redirect
+      # Websecure
+      traefik.http.routers.navidrome.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.navidrome.entrypoints: websecure
+      traefik.http.routers.navidrome.service: navidrome
+      traefik.http.routers.navidrome.tls.certresolver: myresolver
