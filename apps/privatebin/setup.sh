@@ -19,5 +19,7 @@ echo "$LOCAL_IPV6 $APP_DOMAIN" >> /etc/hosts
 service dnsmasq restart
 
 pushd $APP_DIR
+mkdir data
+chown 65534:82 data
 docker compose up -d
 popd
