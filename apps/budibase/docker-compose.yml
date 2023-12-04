@@ -1,0 +1,30 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  budibase:
+    image: budibase/budibase:2.13.30
+    restart: unless-stopped
+    container_name: budibase
+    volumes:
+      - ./data:/data
+    networks:
+      - base_proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.budibase-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.budibase.loadbalancer.passhostheader: true
+      traefik.http.services.budibase.loadbalancer.server.port: 80
+      # Web
+      traefik.http.routers.budibase-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.budibase-insecure.entrypoints: web
+      traefik.http.routers.budibase-insecure.service: budibase
+      traefik.http.routers.budibase-insecure.middlewares: budibase-web-redirect
+      # Websecure
+      traefik.http.routers.budibase.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.budibase.entrypoints: websecure
+      traefik.http.routers.budibase.service: budibase
+      traefik.http.routers.budibase.tls.certresolver: myresolver
