@@ -19,6 +19,8 @@ echo "MARIADB_USER_PASSWORD=$MARIADB_USER_PASSWORD" >> $APP_DIR/.env
 cp docker-compose.yml $APP_DIR/
 cp backup.sh $APP_DIR/
 cp restore.sh $APP_DIR/
+mkdir -p $APP_DIR/agent-data
+cp backup-discovery.sh $APP_DIR/agent-data/
 
 echo "$LOCAL_IPV4 $APP_DOMAIN" >> /etc/hosts
 echo "$LOCAL_IPV6 $APP_DOMAIN" >> /etc/hosts

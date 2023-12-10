@@ -1,0 +1,61 @@
+zabbix_export:
+  version: '6.4'
+  host_groups:
+    - uuid: 6f6799aa69e844b4b3918f779f2abf08
+      name: 'Zabbix servers'
+  hosts:
+    - host: Backups
+      name: Backups
+      groups:
+        - name: 'Zabbix servers'
+      interfaces:
+        - useip: 'NO'
+          dns: zabbix-agent
+          interface_ref: if1
+      items:
+        - name: 'Last backup time'
+          key: 'vfs.file.time[/mnt/ssd/backup.marker]'
+          delay: 10m
+          history: 30d
+          trends: 90d
+          interface_ref: if1
+          triggers:
+            - expression: 'fuzzytime(/Backups/vfs.file.time[/mnt/ssd/backup.marker],30h)=0'
+              name: 'Backup not completed'
+              priority: HIGH
+      discovery_rules:
+        - name: 'Services with backups'
+          key: 'system.run[bash /var/monitoring/backup_discovery.sh]'
+          lifetime: 7d
+          interface_ref: if1
+          item_prototypes:
+            - name: 'Backup marker exists'
+              key: 'vfs.file.exists[/mnt/ssd/apps/{#SERVICE_NAME}/backup.marker]'
+              history: 30d
+              trends: 90d
+              interface_ref: if1
+              trigger_prototypes:
+                - expression: 'last(/Backups/vfs.file.exists[/mnt/ssd/apps/{#SERVICE_NAME}/backup.marker])=0'
+                  name: '{#SERVICE_NAME} not performing backups'
+                  priority: HIGH
+            - name: 'Last backup time'
+              key: 'vfs.file.time[/mnt/ssd/apps/{#SERVICE_NAME}/backup.marker]'
+              history: 30d
+              trends: 90d
+              interface_ref: if1
+              trigger_prototypes:
+                - expression: 'fuzzytime(/Backups/vfs.file.time[/mnt/ssd/apps/{#SERVICE_NAME}/backup.marker],30h)=0'
+                  name: '{#SERVICE_NAME} backup not successful'
+                  priority: HIGH
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var services = value.split(";");
+                  var items = [];
+                  for (var i = 0; i < services.length; i++) {
+                    var service = services[i];
+                    items.push({"{#SERVICE_NAME}": service});
+                  }
+                  return JSON.stringify(items);
+      inventory_mode: DISABLED

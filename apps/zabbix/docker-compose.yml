@@ -15,7 +15,8 @@ services:
     environment:
       - DB_SERVER_HOST=zabbix-db
       - MYSQL_USER=zabbix
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_PASSWORD=${MARIADB_USER_PASSWORD}
+      - ZBX_NODEADDRESS=zabbix-agent
     networks:
       - zabbix
     depends_on:
@@ -26,9 +27,10 @@ services:
     image: zabbix/zabbix-web-nginx-mysql:6.4.9-alpine
     container_name: zabbix-frontend
     environment:
+      - ZBX_SERVER_HOST=zabbix-server
       - DB_SERVER_HOST=zabbix-db
       - MYSQL_USER=zabbix
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_PASSWORD=${MARIADB_USER_PASSWORD}
     depends_on:
       - zabbix-db
     networks:
@@ -55,10 +57,12 @@ services:
     image: zabbix/zabbix-agent:6.4.9-alpine
     privileged: true
     environment:
-      - ZBX_HOSTNAME='local'
+      - ZBX_HOSTNAME=zabbix-agent
       - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_ALLOWKEY=system.run[bash /var/monitoring/*]
     volumes:
       - ./agent-data:/var/monitoring
+      - /mnt/ssd:/mnt/ssd
     networks:
       - zabbix
 
@@ -69,14 +73,14 @@ services:
       - MARIADB_ROOT_PASSWORD
       - MARIADB_DATABASE=zabbix
       - MARIADB_USER=zabbix
-      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+      - MARIADB_PASSWORD=${MARIADB_USER_PASSWORD}
     volumes:
       - ${LOCAL_DATA_DIR}/db:/var/lib/mysql
     networks:
-      - seafile
+      - zabbix
     restart: unless-stopped
     healthcheck:
-      test: '/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute "SHOW DATABASES;"'
+      test: '/usr/bin/mysql --user=root --password=$$MARIADB_ROOT_PASSWORD --execute "SHOW DATABASES;"'
       interval: 5s
       timeout: 1s
       retries: 5

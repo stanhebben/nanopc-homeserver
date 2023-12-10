@@ -195,6 +195,7 @@ If you're setting up a new system, follow these instructions. If restoring from 
   - `privatebin` - secure end-to-end encrypted note sharing
   - `seafile` - file storage (Dropbox / Google drive alternative)
   - `vaultwarden` - resource-efficient Bitwarden alternative
+  - `zabbix` - server monitoring (includes backup monitoring, see below)
 - For each service you want to be externally accessible, you'll also have to add an entry to your Cloudflare tunnel configuration:
   - From your BackBlaze dashboard, go to Zero trust -> Access -> Tunnels
   - Next to your tunnels, press the ... icon and select "Configure"
@@ -215,6 +216,25 @@ If you're setting up a new system, follow these instructions. If restoring from 
     - `privatebin`: `privatebin:8080`
     - `seafile`: `seafile`
     - `vaultwarden`: `vaultwarden`
+	- `zabbix`: `zabbix-frontend:8080`
+
+## Backup monitoring
+
+Backups can fail for random reasons, and a failing backup is often only noticed when it's too late. To make sure backup failures don't go unnoticed, it is highly recommended to setup backup monitoring.
+
+This be performed by setting up and configuring Zabbix as follows:
+
+- Install the `zabbix` service
+- Login to zabbix (default username = `Admin`, password = `zabbix`)
+- Go to Alerts -> Media types and enable a media type of choice. For instance, configure Email (HTML) with your provider's SMTP server.
+- Change your admin username to something safer by going to User settings -> Profile and changing your password there
+- In your profile, go to the Media tab and add your media. If you enabled Email (HTML) in the previous step, add Email (HTML) there with your e-mail address. You only need to enable High and Disaster levels.
+- Go to Data collection -> Hosts and press the import button. Import the `zbx_export_hosts.yaml` in this repository root.
+- Go to Alerts -> Actions -> Trigger actions and make sure that the "Report problems to Zabbix administrators" is enabled.
+
+The monitoring will:
+- Give an alert when the general backup fails (no backup for 30 hours)
+- Give an alert when any of the services which are *supposed* to generate a backup, didn't generate one. In this case, an error will be mailed to you for the specific service.
 
 ## Restoring a backup
 
