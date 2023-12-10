@@ -236,6 +236,8 @@ The monitoring will:
 - Give an alert when the general backup fails (no backup for 30 hours)
 - Give an alert when any of the services which are *supposed* to generate a backup, didn't generate one. In this case, an error will be mailed to you for the specific service.
 
+Note that for each service that is new and hasn't generated a backup yet, an error will be generated. You can make it go away by running the backup script manually. (`cd /mnt/ssd && bash backup.sh`)
+
 ## Restoring a backup
 
 The system will automatically take nightly backups (at 2:00 AM by default). `restic` is used to make the backups - they are end-to-end encrypted (BackBlaze can't read your data) and snapshots are kept for 14 days by default. Update the `/mnt/ssd/backup.sh` script if you want to change which snapshots are kept.
