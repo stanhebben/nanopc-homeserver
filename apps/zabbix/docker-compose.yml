@@ -1,0 +1,83 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+  zabbix:
+
+services:
+  zabbix-server:
+    restart: unless-stopped
+    image: zabbix/zabbix-server-mysql:6.4.9-alpine
+    container_name: zabbix-server
+    ports:
+      - "10051:10051"
+    environment:
+      - DB_SERVER_HOST=zabbix-db
+      - MYSQL_USER=zabbix
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - zabbix
+    depends_on:
+      - zabbix-db
+
+  zabbix-frontend:
+    restart: unless-stopped
+    image: zabbix/zabbix-web-nginx-mysql:6.4.9-alpine
+    container_name: zabbix-frontend
+    environment:
+      - DB_SERVER_HOST=zabbix-db
+      - MYSQL_USER=zabbix
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      - zabbix-db
+    networks:
+      - base_proxy
+      - zabbix
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.zabbix-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.zabbix.loadbalancer.passhostheader: true
+      traefik.http.services.zabbix.loadbalancer.server.port: 8080
+      # Web
+      traefik.http.routers.zabbix-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.zabbix-insecure.entrypoints: web
+      traefik.http.routers.zabbix-insecure.service: zabbix
+      traefik.http.routers.zabbix-insecure.middlewares: zabbix-web-redirect
+      # Websecure
+      traefik.http.routers.zabbix.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.zabbix.entrypoints: websecure
+      traefik.http.routers.zabbix.service: zabbix
+      traefik.http.routers.zabbix.tls.certresolver: myresolver
+
+  zabbix-agent:
+    restart: unless-stopped
+    image: zabbix/zabbix-agent:6.4.9-alpine
+    privileged: true
+    environment:
+      - ZBX_HOSTNAME='local'
+      - ZBX_SERVER_HOST=zabbix-server
+    volumes:
+      - ./agent-data:/var/monitoring
+    networks:
+      - zabbix
+
+  zabbix-db:
+    image: mariadb:10.8
+    container_name: zabbix-db
+    environment:
+      - MARIADB_ROOT_PASSWORD
+      - MARIADB_DATABASE=zabbix
+      - MARIADB_USER=zabbix
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - ${LOCAL_DATA_DIR}/db:/var/lib/mysql
+    networks:
+      - seafile
+    restart: unless-stopped
+    healthcheck:
+      test: '/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute "SHOW DATABASES;"'
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
