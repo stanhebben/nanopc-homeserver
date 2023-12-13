@@ -229,7 +229,7 @@ This be performed by setting up and configuring Zabbix as follows:
 - Go to Alerts -> Media types and enable a media type of choice. For instance, configure Email (HTML) with your provider's SMTP server.
 - Change your admin username to something safer by going to User settings -> Profile and changing your password there
 - In your profile, go to the Media tab and add your media. If you enabled Email (HTML) in the previous step, add Email (HTML) there with your e-mail address. You only need to enable High and Disaster levels.
-- Go to Data collection -> Hosts and press the import button. Import the `zbx_export_hosts.yaml` in this repository root.
+- Go to Data collection -> Hosts and press the import button. Import the `zbx_export_hosts.yaml` in this repository root. Turn off the "delete missing" option.
 - Go to Alerts -> Actions -> Trigger actions and make sure that the "Report problems to Zabbix administrators" is enabled.
 
 The monitoring will:
