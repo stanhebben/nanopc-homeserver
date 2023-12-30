@@ -3,18 +3,17 @@ networks:
   base_proxy:
     external: true
   xwiki:
-    driver: bridge
+
 
 services:
-  web:
+  xwiki-web:
     image: "xwiki:stable-mysql-tomcat"
-    container_name: xwiki-mysql-tomcat-web
     depends_on:
-      - db
+      - xwiki-db
     environment:
       - DB_USER=xwiki
       - DB_PASSWORD=xwiki
-      - DB_HOST=xwiki-mysql-db
+      - DB_HOST=xwiki-db
     volumes:
       - ./data:/usr/local/xwiki
     networks:
@@ -36,9 +35,8 @@ services:
       traefik.http.routers.xwiki.service: xwiki
       traefik.http.routers.xwiki.tls.certresolver: myresolver
 
-  db:
+  xwiki-db:
     image: "mysql:8.2"
-    container_name: xwiki-mysql-db
     volumes:
       - ${LOCAL_DATA_DIR}/db:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

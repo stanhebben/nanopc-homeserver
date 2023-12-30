@@ -5,6 +5,7 @@ networks:
     external: true
   zabbix:
 
+
 services:
   zabbix-server:
     restart: unless-stopped
@@ -19,6 +20,7 @@ services:
       - ZBX_NODEADDRESS=zabbix-agent
     networks:
       - zabbix
+      - base_proxy
     depends_on:
       - zabbix-db
 
