@@ -1,0 +1,65 @@
+version: '2'
+networks:
+  base_proxy:
+    external: true
+  xwiki:
+    driver: bridge
+
+services:
+  web:
+    image: "xwiki:stable-mysql-tomcat"
+    container_name: xwiki-mysql-tomcat-web
+    depends_on:
+      - db
+    environment:
+      - DB_USER=xwiki
+      - DB_PASSWORD=xwiki
+      - DB_HOST=xwiki-mysql-db
+    volumes:
+      - ./data:/usr/local/xwiki
+    networks:
+      - xwiki
+      - base_proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.xwiki-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.xwiki.loadbalancer.passhostheader: true
+      traefik.http.services.xwiki.loadbalancer.server.port: 8080
+      # Web
+      traefik.http.routers.xwiki-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.xwiki-insecure.entrypoints: web
+      traefik.http.routers.xwiki-insecure.service: xwiki
+      traefik.http.routers.xwiki-insecure.middlewares: xwiki-web-redirect
+      # Websecure
+      traefik.http.routers.xwiki.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.xwiki.entrypoints: websecure
+      traefik.http.routers.xwiki.service: xwiki
+      traefik.http.routers.xwiki.tls.certresolver: myresolver
+
+  db:
+    image: "mysql:8.2"
+    container_name: xwiki-mysql-db
+    volumes:
+      - ${LOCAL_DATA_DIR}/db:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=xwiki
+      - MYSQL_PASSWORD=xwiki
+      - MYSQL_DATABASE=xwiki
+    command:
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_bin"
+      - "--explicit-defaults-for-timestamp=1"
+    networks:
+      - xwiki
+    healthcheck:
+      test: '/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute "SHOW DATABASES;"'
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  mysql-data: {}
+  xwiki-data: {}

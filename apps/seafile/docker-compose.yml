@@ -5,6 +5,7 @@ networks:
     external: true
   seafile:
 
+
 services:
   seafile-db:
     image: mariadb:10.8
@@ -47,8 +48,10 @@ services:
       - SEAFILE_SERVER_HOSTNAME=$APP_DOMAIN
       - FORCE_HTTPS_IN_CONF=true
     depends_on:
-      - seafile-db
-      - memcached
+      seafile-db:
+        condition: service_healthy
+      memcached:
+        condition: service_started
     networks:
       - seafile
       - base_proxy
