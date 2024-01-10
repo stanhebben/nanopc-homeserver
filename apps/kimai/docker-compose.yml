@@ -1,0 +1,62 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+  kimai:
+
+
+services:
+  kimai_db:
+    image: mariadb:10.8
+    container_name: kimai_db
+    restart: always
+    volumes:
+      - ${LOCAL_DATA_DIR}/db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=kimai
+      - MYSQL_USER=kimai
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    networks:
+      - kimai
+    healthcheck:
+      test: '/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute "SHOW DATABASES;"'
+      interval: 5s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+
+  kimai:
+    hostname: kimai
+    container_name: kimai
+    image: kimai/kimai2:apache-latest
+    restart: unless-stopped
+    networks:
+      - kimai
+      - base_proxy
+    depends_on:
+      - kimai_db
+    environment:
+      APP_ENV: prod
+      ADMINMAIL: ${KIMAI_ADMIN_EMAIL}
+      ADMINPASS: ${KIMAI_ADMIN_PASS}
+      DATABASE_URL: mysql://kimai:${MYSQL_PASSWORD}@kimai_db/kimai
+      TRUSTED_HOSTS: nginx,localhost,127.0.0.1,traefik,${APP_DOMAIN}
+      TRUSTED_PROXIES: nginx,localhost,127.0.0.1,traefik,${APP_DOMAIN}
+      memory_limit: 2048
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.kimai-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.kimai.loadbalancer.passhostheader: true
+      traefik.http.services.kimai.loadbalancer.server.port: 8001
+      # Web
+      traefik.http.routers.kimai-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.kimai-insecure.entrypoints: web
+      traefik.http.routers.kimai-insecure.service: kimai
+      traefik.http.routers.kimai-insecure.middlewares: kimai-web-redirect
+      # Websecure
+      traefik.http.routers.kimai.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.kimai.entrypoints: websecure
+      traefik.http.routers.kimai.service: kimai
+      traefik.http.routers.kimai.tls.certresolver: myresolver

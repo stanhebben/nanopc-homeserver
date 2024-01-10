@@ -1,24 +1,24 @@
 #!/bin/bash
 
 read -p "Domain name: " APP_DOMAIN
+read -p "Admin email: " KIMAI_ADMIN_EMAIL
+read -p "Admin password: " KIMAI_ADMIN_PASS
 
-APP_DIR=/mnt/ssd/apps/monica
-LOCAL_DATA_DIR=/mnt/ssd/apps-local/monica
+APP_DIR=/mnt/ssd/apps/kimai
+LOCAL_DATA_DIR=/mnt/ssd/apps-local/kimai
 LOCAL_IPV4=`uci get network.lan.ipaddr`
 LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
 LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}
 MYSQL_ROOT_PASSWORD=`openssl rand -base64 16`
-MONICA_APP_KEY=`openssl rand -base64 16`
-MONICA_DB_PASS=`openssl rand -base64 16`
-TZ=`uci get system.@system[0].zonename`
+MYSQL_PASSWORD=`openssl rand -base64 16`
 
 mkdir -p $APP_DIR
 echo "APP_DOMAIN=$APP_DOMAIN" >> $APP_DIR/.env
 echo "LOCAL_DATA_DIR=$LOCAL_DATA_DIR" >> $APP_DIR/.env
 echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> $APP_DIR/.env
-echo "MONICA_APP_KEY=$MONICA_APP_KEY" >> $APP_DIR/.env
-echo "MONICA_DB_PASS=$MONICA_DB_PASS" >> $APP_DIR/.env
-echo "TZ=$TZ" >> $APP_DIR/.env
+echo "MYSQL_PASSWORD=$MYSQL_PASSWORD" >> $APP_DIR/.env
+echo "KIMAI_ADMIN_EMAIL=$KIMAI_ADMIN_EMAIL" >> $APP_DIR/.env
+echo "KIMAI_ADMIN_PASS=$KIMAI_ADMIN_PASS" >> $APP_DIR/.env
 
 cp docker-compose.yml $APP_DIR/
 cp backup.sh $APP_DIR/
