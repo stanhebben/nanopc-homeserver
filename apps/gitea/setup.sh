@@ -2,8 +2,8 @@
 
 read -p "Domain name: " APP_DOMAIN
 
-APP_DIR=/mnt/ssd/apps/gitea
-LOCAL_DATA_DIR=/mnt/ssd/apps-local/gitea
+APP_DIR=$ROOT_DIR/apps/gitea
+LOCAL_DATA_DIR=$ROOT_DIR/apps-local/gitea
 LOCAL_IPV4=`uci get network.lan.ipaddr`
 LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
 LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}

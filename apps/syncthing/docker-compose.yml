@@ -1,0 +1,39 @@
+version: "3.10"
+
+networks:
+  base_proxy:
+    external: true
+
+services:
+  syncthing:
+    image: syncthing/syncthing:latest
+    container_name: syncthing
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ}
+    volumes:
+      - ./data:/var/syncthing
+      - /mnt/ssd/syncthing:/var/syncthing/Sync
+    ports:
+      - "22000:22000/tcp"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+    networks:
+      - base_proxy
+    labels:
+      traefik.enable: true
+      traefik.http.middlewares.syncthing-web-redirect.redirectscheme.scheme: https
+      traefik.http.services.syncthing.loadbalancer.passhostheader: true
+      traefik.http.services.syncthing.loadbalancer.server.port: 8384
+      # Web
+      traefik.http.routers.syncthing-insecure.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.syncthing-insecure.entrypoints: web
+      traefik.http.routers.syncthing-insecure.service: syncthing
+      traefik.http.routers.syncthing-insecure.middlewares: syncthing-web-redirect
+      # Websecure
+      traefik.http.routers.syncthing.rule: Host(`${APP_DOMAIN}`)
+      traefik.http.routers.syncthing.entrypoints: websecure
+      traefik.http.routers.syncthing.service: syncthing
+      traefik.http.routers.syncthing.tls.certresolver: myresolver

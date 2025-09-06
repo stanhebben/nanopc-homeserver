@@ -2,9 +2,9 @@
 
 read -p "Domain name: " APP_DOMAIN
 
-APP_DIR=/mnt/ssd/apps/jellyfin
-MEDIA_FOLDER=/mnt/ssd/media
-LOCAL_DATA_DIR=/mnt/ssd/apps-local/jellyfin
+APP_DIR=$ROOT_DIR/apps/jellyfin
+MEDIA_FOLDER=$ROOT_DIR/media
+LOCAL_DATA_DIR=$ROOT_DIR/apps-local/jellyfin
 LOCAL_IPV4=`uci get network.lan.ipaddr`
 LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
 LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}

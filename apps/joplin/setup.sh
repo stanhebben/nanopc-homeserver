@@ -3,8 +3,8 @@
 read -p "Domain name: " APP_DOMAIN
 DB_PASSWORD=`openssl rand -base64 16`
 
-APP_DIR=/mnt/ssd/apps/joplin
-LOCAL_DATA_DIR=/mnt/ssd/apps-local/joplin
+APP_DIR=$ROOT_DIR/apps/joplin
+LOCAL_DATA_DIR=$ROOT_DIR/apps-local/joplin
 LOCAL_IPV4=`uci get network.lan.ipaddr`
 LOCAL_IPV6_PREFIX=`uci get network.globals.ula_prefix`
 LOCAL_IPV6=${LOCAL_IPV6_PREFIX/::\/48/::1}
